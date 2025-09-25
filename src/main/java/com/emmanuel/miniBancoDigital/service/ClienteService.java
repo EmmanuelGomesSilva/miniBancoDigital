@@ -1,0 +1,70 @@
+package com.emmanuel.miniBancoDigital.service;
+
+
+import com.emmanuel.miniBancoDigital.model.Cliente;
+import com.emmanuel.miniBancoDigital.repository.ClienteRepository;
+import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
+
+@Service // Marca a classe como service no Spring
+@AllArgsConstructor //Injeta o repository via construtor
+public class ClienteService {
+    private final ClienteRepository repository;
+
+    // Cria um cliente e retorna o mesmo
+    public Cliente create(Cliente cliente) {
+        try {
+            return repository.save(cliente); // Tenta salvar no banco
+        } catch (DataIntegrityViolationException e) {
+            // se CPF ou email duplicado, lança exceção que será tratada globalmente
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF ou email já cadastrado");
+        }
+
+    }
+
+
+    // Lista todos os clientes ordenados pelo nome e email
+    public List<Cliente> list() {
+        Sort sort = Sort.by("nome").ascending();
+        return repository.findAll(sort);
+
+    }
+
+    // Atualiza um cliente existente
+    public Cliente update(Cliente clienteAtualizado) {
+        // Busca cliente pelo ID, se não existir lança 404
+        Cliente clienteExistente = repository.findById(clienteAtualizado.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado"));
+
+        // Atualiza campos
+        clienteExistente.setNome(clienteAtualizado.getNome());
+        clienteExistente.setCpf(clienteAtualizado.getCpf());
+        clienteExistente.setEmail(clienteAtualizado.getEmail());
+
+        try {
+            return repository.save(clienteExistente); // Salva as alterações
+        } catch (DataIntegrityViolationException e) {
+            // Se CPF/email duplicado ao atualizar
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF ou email já cadastrado");
+        }
+
+
+    }
+
+    // Deleta um cliente pelo ID
+    public void delete(Long id) {
+        // Verifica se o cliente existe
+
+        if (!repository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado");
+        }
+        repository.deleteById(id); // Deleta do banco
+    }
+}
