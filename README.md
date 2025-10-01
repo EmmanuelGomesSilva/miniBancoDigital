@@ -1,6 +1,7 @@
 # Mini Banco Digital
 
 CRUD de clientes e gerenciamento de contas e transações para um mini banco digital, feito com Spring Boot, JPA e H2.
+
 ## Tecnologias
 - Java 21
 - Spring Boot (Web, JPA, Validation)
@@ -14,7 +15,6 @@ CRUD de clientes e gerenciamento de contas e transações para um mini banco dig
 - `service` → regras de negócio
 - `controller` → endpoints REST
 - `exception` → tratamento global de erros
-
 
 ## Funcionalidades
 ### Cliente
@@ -37,27 +37,23 @@ CRUD de clientes e gerenciamento de contas e transações para um mini banco dig
 
 ## ▶️ Endpoints principais
 ### Cliente
-
-* POST /clientes → criar cliente
-* GET /clientes → listar clientes
-* PUT /clientes → atualizar cliente
-* DELETE /clientes/{id} → deletar cliente
+* **POST** `/clientes` → criar cliente
+* **GET** `/clientes` → listar clientes
+* **PUT** `/clientes` → atualizar cliente
+* **DELETE** `/clientes/{id}` → deletar cliente
 
 ### Conta
-
-* POST /contas?idCliente={id} → criar conta vinculada a cliente
-* GET /contas → listar contas
-* PUT /contas → atualizar conta
-* DELETE /contas/{id} → excluir conta
+* **POST** `/contas?idCliente={id}` → criar conta vinculada a cliente
+* **GET** `/contas` → listar contas
+* **PUT** `/contas` → atualizar conta
+* **DELETE** `/contas/{id}` → excluir conta
 
 ### Transação
-
-* POST /transacoes/depositar?contaDestino={id}&valor={valor} → depósito
-* POST /transacoes/sacar?contaOrigem={id}&valor={valor} → saque
-* POST /transacoes/transferir?contaOrigem={id}&contaDestino={id}&valor={valor} → transferência
+* **POST** `/transacoes/depositar?idConta={id}&valor={valor}` → depósito em conta
+* **POST** `/transacoes/sacar?idConta={id}&valor={valor}` → saque em conta
+* **POST** `/transacoes/transferir?idOrigem={id}&idDestino={id}&valor={valor}` → transferência entre contas
 
 ## 📸 Demonstração
-
 ### Clientes
 ![Clientes](docs/clientes.png)
 
@@ -73,11 +69,8 @@ CRUD de clientes e gerenciamento de contas e transações para um mini banco dig
 ### Transferência
 ![Transferência](docs/transferencia.png)
 
-
-
 ## Como rodar
 1. Clonar o repositório
 2. Importar no IntelliJ ou Eclipse
 3. Rodar a aplicação (`MiniBancoDigitalApplication`)
-4. Testar endpoints usando Postman ou Insomnia
-
+4. Testar endpoints usando Postman ou Insomnia  
