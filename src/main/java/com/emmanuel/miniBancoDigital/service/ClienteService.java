@@ -3,6 +3,7 @@ package com.emmanuel.miniBancoDigital.service;
 
 import com.emmanuel.miniBancoDigital.model.Cliente;
 import com.emmanuel.miniBancoDigital.repository.ClienteRepository;
+import com.emmanuel.miniBancoDigital.repository.ContaRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
@@ -12,11 +13,14 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 
 @Service // Marca a classe como service no Spring
 @AllArgsConstructor //Injeta o repository via construtor
 public class ClienteService {
     private final ClienteRepository repository;
+    private final ContaRepository contaRepository;
 
     // Cria um cliente e retorna o mesmo
     public Cliente create(Cliente cliente) {
@@ -29,7 +33,6 @@ public class ClienteService {
 
     }
 
-
     // Lista todos os clientes ordenados pelo nome e email
     public List<Cliente> list() {
         Sort sort = Sort.by("nome").ascending();
@@ -41,7 +44,7 @@ public class ClienteService {
     public Cliente update(Cliente clienteAtualizado) {
         // Busca cliente pelo ID, se não existir lança 404
         Cliente clienteExistente = repository.findById(clienteAtualizado.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cliente não encontrado"));
 
         // Atualiza campos
         clienteExistente.setNome(clienteAtualizado.getNome());
@@ -55,16 +58,19 @@ public class ClienteService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF ou email já cadastrado");
         }
 
-
     }
 
-    // Deleta um cliente pelo ID
     public void delete(Long id) {
-        // Verifica se o cliente existe
+        Cliente cliente = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cliente não encontrado"));
 
-        if (!repository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado");
-        }
-        repository.deleteById(id); // Deleta do banco
+        // Deleta todas as contas associadas
+        contaRepository.deleteAllByCliente(cliente);
+
+        // Deleta o cliente
+        repository.delete(cliente);
+
+
+
     }
 }

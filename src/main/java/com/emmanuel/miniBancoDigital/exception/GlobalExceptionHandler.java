@@ -10,37 +10,33 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.stream.Collectors;
 
-@ControllerAdvice // Marca a classe para tratar exceções globalmente em todos os controllers
+@ControllerAdvice // Aplica este tratamento de exceções em todos os controllers do projeto
 public class GlobalExceptionHandler {
 
-    // Captura exceções lançadas pelo banco quando há violação de restrições(ex: CPF/email duplicado)
+    // Trata erros de violação de restrições do banco (ex: campos únicos duplicados)
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<String> handleDuplicateKey(DataIntegrityViolationException ex){
-        // Retorna HTTP 400 (Bad Request) com mensagem amigável
+    public ResponseEntity<String> handleDuplicateKey(DataIntegrityViolationException ex) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body("CPF ou email já cadastrado");// Mensagem personalizada pro cliente da API
+                .body("Violação de restrição de dados (ex: valor duplicado em campo único).");
     }
 
-    // Captura exceções do tipo ResponseStatusException lançadas no service
+    // Trata exceções lançadas manualmente no código com ResponseStatusException
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<String> handleNotFound(ResponseStatusException ex){
-        // Usa o status que foi definido na exceção(ex: 404) e devolve a mensagem
+    public ResponseEntity<String> handleNotFound(ResponseStatusException ex) {
         return ResponseEntity
                 .status(ex.getStatusCode())
                 .body(ex.getReason());
     }
 
-    // Captura erros de validação do @Valid nos controllers
+    // Trata erros de validação gerados pelo @Valid nos controllers
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleValidation(MethodArgumentNotValidException ex){
-        // Junta todas as mensagens de erro dos campos em uma única string
+    public ResponseEntity<String> handleValidation(MethodArgumentNotValidException ex) {
         String msg = ex.getBindingResult().getFieldErrors()
                 .stream()
-                .map(f -> f.getField() + ": " + f.getDefaultMessage())// Ex: "Nome não pode estar vazio
+                .map(f -> f.getField() + ": " + f.getDefaultMessage())
                 .collect(Collectors.joining(", "));
 
-        // Retorna HTTP 400 (Bad Request) com todas as mensagens de validação
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(msg);
