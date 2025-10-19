@@ -40,13 +40,17 @@ public class ClienteService {
 
     }
 
+    public Cliente findById(Long id){
+        return repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cliente não encontrado"));
+    }
+
     // Atualiza um cliente existente
-    public Cliente update(Cliente clienteAtualizado) {
-        // Busca cliente pelo ID, se não existir lança 404
-        Cliente clienteExistente = repository.findById(clienteAtualizado.getId())
+    public Cliente update(Long id, Cliente clienteAtualizado) {
+
+        Cliente clienteExistente = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cliente não encontrado"));
 
-        // Atualiza campos
         clienteExistente.setNome(clienteAtualizado.getNome());
         clienteExistente.setCpf(clienteAtualizado.getCpf());
         clienteExistente.setEmail(clienteAtualizado.getEmail());
@@ -54,7 +58,6 @@ public class ClienteService {
         try {
             return repository.save(clienteExistente); // Salva as alterações
         } catch (DataIntegrityViolationException e) {
-            // Se CPF/email duplicado ao atualizar
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF ou email já cadastrado");
         }
 
