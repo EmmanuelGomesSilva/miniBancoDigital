@@ -16,7 +16,7 @@ import java.util.List;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
-// Classe de serviço que contém as regras de negócio relacionadas à Conta
+
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -24,7 +24,7 @@ public class ContaService {
     private final ContaRepository contaRepository;
     private final ClienteRepository clienteRepository;
 
-    // Cria uma conta vinculada a um cliente
+
     public Conta create(Conta conta ) {
         Cliente cliente = clienteRepository.findById(conta.getCliente().getId())
                 .orElseThrow(()-> new ResponseStatusException(NOT_FOUND, "Cliente não encontrado"));
