@@ -5,6 +5,7 @@ import com.emmanuel.miniBancoDigital.model.Cliente;
 import com.emmanuel.miniBancoDigital.repository.ClienteRepository;
 import com.emmanuel.miniBancoDigital.repository.ContaRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -15,64 +16,83 @@ import java.util.List;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
-
-@Service // Marca a classe como service no Spring
-@AllArgsConstructor //Injeta o repository via construtor
+@Slf4j
+@Service
+@AllArgsConstructor
 public class ClienteService {
     private final ClienteRepository repository;
     private final ContaRepository contaRepository;
 
-    // Cria um cliente e retorna o mesmo
+
     public Cliente create(Cliente cliente) {
+        log.info("Cliente criado com CPF {}", cliente.getCpf());
         try {
-            return repository.save(cliente); // Tenta salvar no banco
+            Cliente salvo = repository.save(cliente);
+            log.info("Cliente criado com ID {}", cliente.getId());
+            return salvo;
         } catch (DataIntegrityViolationException e) {
-            // se CPF ou email duplicado, lança exceção que será tratada globalmente
+            log.error("Erro ao criar cliente: CPF ou email duplicado {}", cliente.getCpf());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF ou email já cadastrado");
         }
 
     }
 
-    // Lista todos os clientes ordenados pelo nome e email
     public List<Cliente> list() {
+        log.info("Recebendo requisição para listar todos os clientes");
         Sort sort = Sort.by("nome").ascending();
-        return repository.findAll(sort);
+        List<Cliente> clientes = repository.findAll(sort);
+        log.info("total de {} clientes retornados", clientes.size());
+        return clientes;
 
     }
 
-    public Cliente findById(Long id){
-        return repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cliente não encontrado"));
+    public Cliente findById(Long id) {
+        log.info("Buscando cliente ID {}", id);
+        Cliente cliente = repository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Cliente ID {} não encontrado", id);
+                    return new ResponseStatusException(NOT_FOUND, "Cliente não encontrado");
+                });
+        log.info("Cliente ID {} retornado com sucesso", id);
+        return cliente;
+
     }
 
-    // Atualiza um cliente existente
+
     public Cliente update(Long id, Cliente clienteAtualizado) {
-
+        log.info("Atualizando cliente ID {}", id);
         Cliente clienteExistente = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cliente não encontrado"));
+                .orElseThrow(() -> {
+                    log.warn("Cliente ID {} não encontrado para update", id);
+                    return new ResponseStatusException(NOT_FOUND, "Cliente não encontrado");
+                });
 
         clienteExistente.setNome(clienteAtualizado.getNome());
         clienteExistente.setCpf(clienteAtualizado.getCpf());
         clienteExistente.setEmail(clienteAtualizado.getEmail());
 
         try {
-            return repository.save(clienteExistente); // Salva as alterações
+            Cliente atualizado = repository.save(clienteExistente);
+            log.info("Cliente ID {} atualizado com sucesso", atualizado.getId());
+            return atualizado;
         } catch (DataIntegrityViolationException e) {
+            log.error("Erro ao atualizar cliente ID {}: CPF ou email duplicado", id);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF ou email já cadastrado");
         }
 
     }
 
     public void delete(Long id) {
+        log.info("Deletando cliente ID {}", id);
         Cliente cliente = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cliente não encontrado"));
+                .orElseThrow(() -> {
+                    log.warn("Cliente ID {} não encontrado para delete", id);
+                    return new ResponseStatusException(NOT_FOUND, "Cliente não encontrado");
+                });
 
-        // Deleta todas as contas associadas
         contaRepository.deleteAllByCliente(cliente);
-
-        // Deleta o cliente
         repository.delete(cliente);
-
+        log.info("Cliente ID {} deletado com sucesso", id);
 
 
     }
