@@ -3,45 +3,69 @@ package com.emmanuel.miniBancoDigital.controller;
 
 import com.emmanuel.miniBancoDigital.model.Conta;
 import com.emmanuel.miniBancoDigital.service.ContaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController // Informa ao Spring que esta classe é um controller REST
-@RequestMapping("/contas") // Todas as rotas aqui começam com /contas
-@AllArgsConstructor // Gera o construtor automaticamente para injetar o service
+@Tag(name = "Contas", description = "Endpoints para gerenciar contas bancárias")
+@Slf4j
+@RestController
+@RequestMapping("/contas")
+@AllArgsConstructor
 public class ContaController {
     private final ContaService service;
 
-    // Cria nova conta vinculada a um cliente
+    @Operation(summary = "Cria uma nova conta")
     @PostMapping
-    public Conta create(@RequestBody @Valid Conta conta){
-        // Recebe os dados da conta no corpo da requisição e o ID do cliente associado
-        return service.create(conta, conta.getCliente().getId());
+    public ResponseEntity<Conta> create(@RequestBody @Valid Conta conta){
+
+        log.info("Criando conta para cliente ID {}", conta.getCliente().getId());
+        Conta criada = service.create(conta);
+        log.info("Conta criada com ID {}", criada.getId());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(criada);
     }
 
-    // Lista todas as contas cadastradas
+    @Operation(summary = "Lista todas as contas no banco")
     @GetMapping
-    public List<Conta> list(){
-        // Retorna todas as contas do banco
-        return service.list();
+    public ResponseEntity<List<Conta>> list(){
+        log.info("Recebendo requisição para listar todas as contas");
+        List<Conta> contas = service.list();
+        return ResponseEntity.ok(contas);
     }
 
-    // Atualiza conta existente
-    @PutMapping
-    public Conta update(@RequestBody @Valid Conta conta){
-        // Receb os dados novo da conta e o cliente atualizado
-        return service.update(conta, conta.getCliente());
+    @Operation(summary = "Busca conta pelo ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<Conta> findById(@PathVariable Long id){
+        log.info("Recebendo requisição para buscar conta ID {}", id);
+        Conta conta = service.findById(id);
+        return  ResponseEntity.ok(conta);
+
     }
 
+    @Operation(summary = "Atualiza conta pelo ID")
+    @PutMapping ("/{id}")
+    public ResponseEntity<Conta> update(@PathVariable Long id, @RequestBody @Valid Conta contaNova){
+        log.info("Recebendo requisição para atualizar conta ID {}", id);
+        Conta atualizada =  service.update(id, contaNova);
+        log.info("conta ID {} atualziada com sucesso", atualizada.getId());
+        return ResponseEntity.ok(atualizada);
+    }
 
-    // Deleta uma conta pelo ID
+    @Operation(summary = "Deleta conta pelo ID")
     @DeleteMapping("{id}")
-    public void delete(@PathVariable Long id){
-        // Deleta a conta correspondente ao ID informado na URL
+    public ResponseEntity<Void> delete(@PathVariable Long id){
+        log.info("Recebendo requisição para deletar conta ID {}", id);
         service.delete(id);
+        log. info("Conta ID {} deletada com sucesso", id);
+        return ResponseEntity.noContent().build();
     }
 
 }
